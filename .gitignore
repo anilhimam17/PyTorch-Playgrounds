@@ -1,0 +1,5 @@
+# Stopping Dataset Bloat on the Repo
+data
+
+# Stopping the Environment Bloat on the Repo
+.venv
