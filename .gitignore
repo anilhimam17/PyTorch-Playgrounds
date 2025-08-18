@@ -3,3 +3,6 @@ data
 
 # Stopping the Environment Bloat on the Repo
 .venv
+
+# Stop Saving models to Bloat on the repo
+models
