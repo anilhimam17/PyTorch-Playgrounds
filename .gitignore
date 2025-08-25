@@ -6,3 +6,6 @@ data
 
 # Stop Saving models to Bloat on the repo
 models
+
+# Stopping the __pycache__ bloat on the repo
+__pycache__
