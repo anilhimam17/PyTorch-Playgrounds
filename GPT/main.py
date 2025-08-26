@@ -1,4 +1,5 @@
 from src.data import IMDBMovieReview
+from src.my_gpt import MyGPT
 
 
 # The Main Function
@@ -11,7 +12,9 @@ def main():
 
     # Data String Metrics
     imdb_review_dataset.datastring_metrics()
-    
+
+    # Loading the GPT Model Class
+    gpt_model = MyGPT(imdb_review_dataset.vocab)
 
 # Driver code
 if __name__ == "__main__":

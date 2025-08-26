@@ -7,6 +7,7 @@ from typing import Generator
 
 
 class IMDBMovieReview:
+    """Class implements all the dataset loading, handling and metrics."""
     def __init__(self) -> None:
         self.dataset_path = Path(
             kagglehub.dataset_download(
@@ -32,14 +33,16 @@ class IMDBMovieReview:
         # Cleaning up the string
         self.dataset_string = re.sub(r'[^\x00-\x7F]+', " ", self.dataset_string)
         self.dataset_string = re.sub(r'[\U00010000-\U0010ffff]+', " ", self.dataset_string)
+        
+        # Generating the vocabulary for the dataset string.
+        self.vocab = sorted(list(set(self.dataset_string)))
 
         return self.dataset_string
     
     def datastring_metrics(self) -> None:
         """Provides metrics for the dataset string."""
 
-        vocab = sorted(list(set(self.dataset_string)))
         print(f"Length of the Dataset: {len(self.dataset_string)}\n")
         print(f"First 1000 Chars:\n{self.dataset_string[:1000]}\n")
-        print(f"Vocabulary Size: {len(vocab)}\n")
-        print(f"Vocabulary:\n{"".join(vocab)}")
+        print(f"Vocabulary Size: {len(self.vocab)}\n")
+        print(f"Vocabulary:\n{"".join(self.vocab)}")
