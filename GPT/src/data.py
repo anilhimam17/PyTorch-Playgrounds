@@ -26,8 +26,8 @@ class IMDBMovieReview:
 
     def refine_structure(self) -> str:
         """Focuses the entire dataframe to only the text removing other cols."""
-        
-        self.dataframe = self.dataframe.drop(["sentiment"], axis=1)
+        if "sentiment" in self.dataframe.columns:
+            self.dataframe = self.dataframe.drop(["sentiment"], axis=1)
         self.dataset_string = "\n".join(self.dataframe["text"])
         
         # Cleaning up the string

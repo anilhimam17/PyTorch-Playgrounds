@@ -1,4 +1,7 @@
+import torch
+
 from src.data import IMDBMovieReview
+from src.data_preprocess import DataPreprocessor
 from src.my_gpt import MyGPT
 
 
@@ -10,11 +13,16 @@ def main():
     # Filtering the columns of the Dataset
     review_string = imdb_review_dataset.refine_structure()
 
-    # Data String Metrics
-    imdb_review_dataset.datastring_metrics()
-
     # Loading the GPT Model Class
     gpt_model = MyGPT(imdb_review_dataset.vocab)
+
+    # Creating the data tensor
+    data_preprocessor = DataPreprocessor(review_string, device="mps")
+    data_preprocessor.create_data_tensor(gpt_model)
+    
+    # Splitting the data tensor
+    train_set, valid_set, test_set = data_preprocessor.train_valid_test()
+
 
 # Driver code
 if __name__ == "__main__":
