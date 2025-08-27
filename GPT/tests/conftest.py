@@ -1,4 +1,5 @@
 from src.data import IMDBMovieReview
+from src.data_preprocess import DataPreprocessor
 from src.my_gpt import MyGPT
 import pytest
 
@@ -15,3 +16,9 @@ def dataset():
 def model(dataset):
     """Fixture to load the model with the vocab."""
     return MyGPT(vocab=dataset.vocab)
+
+@pytest.fixture
+def preprocessor(dataset):
+    """Fixture to load the datapreprocessor instance."""
+    data_string = dataset.refine_structure()
+    return DataPreprocessor(data_string)
