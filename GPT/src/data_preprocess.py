@@ -33,7 +33,7 @@ class DataPreprocessor:
 
         return train_set, valid_set, test_set
     
-    def batch_set(self, set_: torch.Tensor, batch_size: int, block_size: int) -> tuple[torch.Tensor, torch.Tensor]:
+    def get_batch(self, set_: torch.Tensor, batch_size: int, block_size: int) -> tuple[torch.Tensor, torch.Tensor]:
         """Batches the data_tensors and provides the pointer to the result."""
 
         # Creating random batches
@@ -42,3 +42,4 @@ class DataPreprocessor:
         y = torch.stack([set_[i + 1 : i + 1 + block_size] for i in ix])
 
         return X, y
+
