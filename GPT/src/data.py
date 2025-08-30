@@ -6,17 +6,24 @@ import re
 from typing import Generator
 
 
+DATASET_PATH = "/Users/raidenshogun/.cache/kagglehub/datasets/atulanandjha/imdb-50k-movie-reviews-test-your-bert/versions/2"
+
+
 class IMDBMovieReview:
     """Class implements all the dataset loading, handling and metrics."""
     def __init__(self) -> None:
-        self.dataset_path = Path(
-            kagglehub.dataset_download(
-                handle="atulanandjha/imdb-50k-movie-reviews-test-your-bert",
-                force_download=False
+
+        local_path = Path(DATASET_PATH)
+        if not local_path.exists():
+            local_path = Path(
+                kagglehub.dataset_download(
+                    handle="atulanandjha/imdb-50k-movie-reviews-test-your-bert",
+                    force_download=False
+                )
             )
-        )
+        
         self.dataframe = pd.read_csv(
-            filepath_or_buffer=self.dataset_path / "train.csv",
+            filepath_or_buffer=local_path / "train.csv",
             encoding="utf-8"
         )
 
