@@ -24,14 +24,14 @@ class OptimizationLoop:
             sample_valid_X, sample_valid_y = self.preprocessor.get_batch(valid_set, batch_size, block_size)
 
             # Training Step
-            loss_train = self.model(sample_train_X, sample_train_y)
+            loss_train, _ = self.model(sample_train_X, sample_train_y)
             self.optimizer.zero_grad()
             loss_train.backward()
             self.optimizer.step()
 
             # Validation Step
             with torch.no_grad():
-                loss_valid = self.model(sample_valid_X, sample_valid_y)
+                loss_valid, _ = self.model(sample_valid_X, sample_valid_y)
 
             mean_train_loss += loss_train
             mean_valid_loss += loss_valid

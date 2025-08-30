@@ -1,3 +1,5 @@
+import torch
+
 from src.data import IMDBMovieReview
 from src.data_preprocess import DataPreprocessor
 from src.optimization import OptimizationLoop
@@ -26,7 +28,12 @@ def main():
     optim_handle = OptimizationLoop(data_preprocessor, gpt_model, 1e-3)
 
     # Training the model
-    optim_handle.train(50000, train_set, valid_set, 32, 8)
+    optim_handle.train(2000, train_set, valid_set, 32, 8)
+
+    idx = torch.zeros((1, 1), dtype=torch.long, device=torch.accelerator.current_accelerator())
+    output_tokens = gpt_model.generate(previous_tokens=idx, max_tokens=500)[0].tolist()
+    output_sentence = gpt_model.decode(output_tokens)
+    print(output_sentence)
 
     del gpt_model
 
