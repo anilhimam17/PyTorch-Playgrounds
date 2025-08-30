@@ -29,7 +29,7 @@ def main():
 
     # Training the model
     print("Training the Model:\n")
-    optim_handle.train(2000, train_set, valid_set, 32, 128)
+    optim_handle.train(10000, train_set, valid_set, 32, 128)
     print("-----------", end="\n\n")
 
     print("Generating Novel Text:\n")

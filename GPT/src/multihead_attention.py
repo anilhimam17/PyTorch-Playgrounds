@@ -20,7 +20,7 @@ class MultiHeadAttention(torch.nn.Module):
             ]
         )
 
-    def forward(self, X):
+    def forward(self, X) -> torch.Tensor:
         """Implements the forward propagation of the MultiHead Attention Layer."""
         return torch.cat(
             [head(X) for head in self.multiple_attention_heads], dim=-1

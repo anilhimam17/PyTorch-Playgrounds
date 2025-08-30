@@ -1,6 +1,7 @@
 import torch
 
 from src.multihead_attention import MultiHeadAttention
+from src.feed_forward import FeedForward
 
 
 class MyGPT(torch.nn.Module):
@@ -25,8 +26,11 @@ class MyGPT(torch.nn.Module):
             num_heads=attention_heads, head_size=n_embd//attention_heads, block_size=block_size, n_embd=n_embd 
         )
 
+        # First FeedForward Block
+        self.first_ffwd = FeedForward(n_embd=n_embd)
+
         # Linear Layers
-        self.last_linear = torch.nn.Linear(n_embd, self.vocab_size)
+        self.last_linear = torch.nn.Linear(128, self.vocab_size)
 
     def encode(self, input_string: str = "") -> list[int]:
         """Encode operation for the simple character level tokenizer."""
@@ -49,8 +53,11 @@ class MyGPT(torch.nn.Module):
         # Attention Layers
         attention_embed = self.first_multiple_attention_heads(x)
 
+        # Feedforward Layers
+        ffwd_scores = self.first_ffwd(attention_embed + x)
+
         # Deeper Layers
-        logits = self.last_linear(attention_embed + x)
+        logits = self.last_linear(ffwd_scores)
 
         loss = torch.tensor([])
         if y is not None:
