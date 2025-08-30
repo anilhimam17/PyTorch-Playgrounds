@@ -1,11 +1,11 @@
 import torch
 
-from src.self_attention import SelfAttentionHead
+from src.multihead_attention import MultiHeadAttention
 
 
 class MyGPT(torch.nn.Module):
     """Class implments the Generatively Pretrained Transformer from scratch using PyTorch."""
-    def __init__(self, vocab: list[str] = [], n_embd: int = 32, block_size: int = 8) -> None:
+    def __init__(self, vocab: list[str] = [], n_embd: int = 64, block_size: int = 128, attention_heads: int = 4) -> None:
         super().__init__()
 
         # Hyperparameters
@@ -21,10 +21,12 @@ class MyGPT(torch.nn.Module):
         self.position_embed = torch.nn.Embedding(self.block_size, n_embd)
 
         # Self Attention Head Blocks
-        self.first_attention_head = SelfAttentionHead(head_size=n_embd, input_features=n_embd, block_size=block_size)
+        self.first_multiple_attention_heads = MultiHeadAttention(
+            num_heads=attention_heads, head_size=n_embd//attention_heads, block_size=block_size, n_embd=n_embd 
+        )
 
         # Linear Layers
-        self.first_linear = torch.nn.Linear(n_embd, self.vocab_size)
+        self.last_linear = torch.nn.Linear(n_embd, self.vocab_size)
 
     def encode(self, input_string: str = "") -> list[int]:
         """Encode operation for the simple character level tokenizer."""
@@ -45,10 +47,10 @@ class MyGPT(torch.nn.Module):
         x = embed_score + pos_score
 
         # Attention Layers
-        attention_embed = self.first_attention_head(x)
+        attention_embed = self.first_multiple_attention_heads(x)
 
         # Deeper Layers
-        logits = self.first_linear(attention_embed + x)
+        logits = self.last_linear(attention_embed + x)
 
         loss = torch.tensor([])
         if y is not None:
