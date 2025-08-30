@@ -33,6 +33,7 @@ class IMDBMovieReview:
         # Cleaning up the string
         self.dataset_string = re.sub(r'[^\x00-\x7F]+', " ", self.dataset_string)
         self.dataset_string = re.sub(r'[\U00010000-\U0010ffff]+', " ", self.dataset_string)
+        self.dataset_string = re.sub(r'[\x08\x10#\$%&\*\+<=>@\[\\\]\^_`\{\|\}~]', " ", self.dataset_string)
         
         # Generating the vocabulary for the dataset string.
         self.vocab = sorted(list(set(self.dataset_string)))

@@ -1,5 +1,7 @@
 import torch
 
+from src.self_attention import SelfAttentionHead
+
 
 class MyGPT(torch.nn.Module):
     """Class implments the Generatively Pretrained Transformer from scratch using PyTorch."""
@@ -18,6 +20,9 @@ class MyGPT(torch.nn.Module):
         self.token_embed = torch.nn.Embedding(self.vocab_size, n_embd)
         self.position_embed = torch.nn.Embedding(self.block_size, n_embd)
 
+        # Self Attention Head Blocks
+        self.first_attention_head = SelfAttentionHead(head_size=n_embd, input_features=n_embd, block_size=block_size)
+
         # Linear Layers
         self.first_linear = torch.nn.Linear(n_embd, self.vocab_size)
 
@@ -32,13 +37,18 @@ class MyGPT(torch.nn.Module):
     def forward(self, X: torch.Tensor, y: torch.Tensor | None = None) -> tuple[torch.Tensor, torch.Tensor]:
         """Implements the forward propagation of the model."""
 
+        B, T = X.shape
+
         # Initial Scores
         embed_score = self.token_embed(X)
-        # pos_score = self.position_embed(torch.arange(self.block_size, device=torch.accelerator.current_accelerator()))
-        # x = embed_score + pos_score
+        pos_score = self.position_embed(torch.arange(T, device=torch.accelerator.current_accelerator()))
+        x = embed_score + pos_score
+
+        # Attention Layers
+        attention_embed = self.first_attention_head(x)
 
         # Deeper Layers
-        logits = self.first_linear(embed_score)
+        logits = self.first_linear(attention_embed + x)
 
         loss = torch.tensor([])
         if y is not None:
@@ -61,7 +71,6 @@ class MyGPT(torch.nn.Module):
             _, logits = self(last_block_size)
 
             # Taking the consideration of only the last token
-            print(logits.shape)
             logits = logits[:, -1, :]
 
             # Getting the probabilities of the words
