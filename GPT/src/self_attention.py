@@ -3,7 +3,7 @@ import torch
 
 class SelfAttentionHead(torch.nn.Module):
     """Class implements a single self-attention head."""
-    def __init__(self, head_size: int, input_features: int, block_size: int, dropout_rate: float = 0.2):
+    def __init__(self, head_size: int, input_features: int, block_size: int, dropout_rate: float = 0.2) -> None:
         super().__init__()
 
         # Attention Matrices
