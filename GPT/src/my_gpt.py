@@ -1,12 +1,11 @@
 import torch
 
-from src.multihead_attention import MultiHeadAttention
-from src.feed_forward import FeedForward
+from src.decoder_block import GPTDecoderBlock
 
 
 class MyGPT(torch.nn.Module):
     """Class implments the Generatively Pretrained Transformer from scratch using PyTorch."""
-    def __init__(self, vocab: list[str] = [], n_embd: int = 64, block_size: int = 128, attention_heads: int = 4) -> None:
+    def __init__(self, vocab: list[str] = [], decoder_layers: int = 6, n_embd: int = 64, block_size: int = 128, attention_heads: int = 4) -> None:
         super().__init__()
 
         # Hyperparameters
@@ -21,16 +20,19 @@ class MyGPT(torch.nn.Module):
         self.token_embed = torch.nn.Embedding(self.vocab_size, n_embd)
         self.position_embed = torch.nn.Embedding(self.block_size, n_embd)
 
-        # Self Attention Head Blocks
-        self.first_multiple_attention_heads = MultiHeadAttention(
-            num_heads=attention_heads, head_size=n_embd//attention_heads, block_size=block_size, n_embd=n_embd 
+        # GPT Decoder Blocks
+        self.decoder_blocks = torch.nn.Sequential(
+            *[
+                GPTDecoderBlock(num_heads=attention_heads, n_embd=n_embd, block_size=block_size)
+                for _ in range(decoder_layers)
+            ]
         )
 
-        # First FeedForward Block
-        self.first_ffwd = FeedForward(n_embd=n_embd)
+        # Final Normalization Layer
+        self.final_ln = torch.nn.LayerNorm(n_embd)
 
         # Linear Layers
-        self.last_linear = torch.nn.Linear(128, self.vocab_size)
+        self.last_linear = torch.nn.Linear(n_embd, self.vocab_size)
 
     def encode(self, input_string: str = "") -> list[int]:
         """Encode operation for the simple character level tokenizer."""
@@ -50,14 +52,14 @@ class MyGPT(torch.nn.Module):
         pos_score = self.position_embed(torch.arange(T, device=torch.accelerator.current_accelerator()))
         x = embed_score + pos_score
 
-        # Attention Layers
-        attention_embed = self.first_multiple_attention_heads(x)
+        # GPT Decoder Blocks
+        block_scores = self.decoder_blocks(x)
 
-        # Feedforward Layers
-        ffwd_scores = self.first_ffwd(attention_embed + x)
+        # Final Normalization
+        block_scores_norm = self.final_ln(block_scores)
 
         # Deeper Layers
-        logits = self.last_linear(ffwd_scores)
+        logits = self.last_linear(block_scores_norm)
 
         loss = torch.tensor([])
         if y is not None:
@@ -89,3 +91,8 @@ class MyGPT(torch.nn.Module):
             previous_tokens = torch.cat((previous_tokens, idx_next), dim=1)
 
         return previous_tokens
+    
+    def save_model(self) -> None:
+        """Saves the weights of the trained model."""
+
+        torch.save(self.state_dict(), "./models/my_gpt_weights.pth")

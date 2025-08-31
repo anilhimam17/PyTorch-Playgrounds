@@ -3,7 +3,7 @@ import torch
 
 class SelfAttentionHead(torch.nn.Module):
     """Class implements a single self-attention head."""
-    def __init__(self, head_size: int, input_features: int, block_size: int):
+    def __init__(self, head_size: int, input_features: int, block_size: int, dropout_rate: float = 0.2):
         super().__init__()
 
         # Attention Matrices
@@ -11,6 +11,9 @@ class SelfAttentionHead(torch.nn.Module):
         self.keys = torch.nn.Linear(input_features, head_size, bias=False)
         self.values = torch.nn.Linear(input_features, head_size, bias=False)
         self.register_buffer("tril", torch.tril(torch.ones(block_size, block_size)))
+
+        # Dropout
+        self.dropout = torch.nn.Dropout(p=dropout_rate)
 
     def forward(self, X: torch.Tensor) -> torch.Tensor:
         """Implements the forward propagation of the Self Attention Head."""
@@ -26,7 +29,10 @@ class SelfAttentionHead(torch.nn.Module):
         attention_pattern = attention_pattern.masked_fill(self.tril[:T, :T] == 0, -torch.inf)  # type: ignore
         attention_pattern = torch.nn.functional.softmax(attention_pattern, dim=-1)
 
+        # Regularization of the Attention Patterns
+        reg_attention_pattern = self.dropout(attention_pattern)
+
         # Weighted Sum
-        output_attended_embeddings = attention_pattern @ values
+        output_attended_embeddings = reg_attention_pattern @ values
         return output_attended_embeddings
 
