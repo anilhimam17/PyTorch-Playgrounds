@@ -6,11 +6,11 @@ This sub-repository contains a from-scratch implementation of a GPT (Generative 
 
 This project was inspired by Andrej Karpathy's excellent "Let's build GPT" lecture and 3Blue1Brown's fantastic visualizations of the attention mechanism. While I had experience with TensorFlow, I wanted to learn the PyTorch API to align my skills with the current research landscape and move beyond high-level libraries to truly understand how these models work internally.
 
-The implementation was scaled up from a toy example to a 13.1 million parameter model trained on a real-world dataset to explore the challenges of training and diagnosing a moderately-sized LLM.
+`(final-update)` The implementation was scaled up from a toy example to a **19.6 million parameter** model trained on a real-world dataset to explore the challenges of training and diagnosing a moderately-sized LLM.
 
 ## Important
 - The model in `main.py` is the original scaled down version that was used to learn the concepts and train on my laptop.
-- The **13.1 million** parameter model was scaled up based on the code in this repo and was ported into a Kaggle Notebook for training. It is available in the repo as `minigpt.ipynb`
+- The **19.6 million** parameter model was scaled up based on the code in this repo and was ported into a Kaggle Notebook for training. It is available in the repo as `minigpt-19-6-million-parameters.ipynb`
 
 ## Key Features
 
@@ -22,10 +22,11 @@ The implementation was scaled up from a toy example to a 13.1 million parameter 
 
 The trained 13.1 million parameter model has the following architecture:
 
--   **Total Parameters:** 13,162,061
+-   **Total Parameters:** 19,664,949
 -   **Embedding Dimensions:** 384
--   **Decoder Blocks:** 8
--   **Attention Heads:** 6
+-   **Decoder Blocks:** 12
+-   **Attention Heads:** 8
+-   **Heads Size:** 48
 -   **Context Length:** 256 tokens
 
 ## Learning Curve
