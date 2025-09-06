@@ -9,3 +9,6 @@ models
 
 # Stopping the __pycache__ bloat on the repo
 __pycache__
+
+# Stopping local dataset being tracked
+ViT/reduced_imagenet/*
