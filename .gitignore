@@ -12,3 +12,6 @@ __pycache__
 
 # Stopping local dataset being tracked
 ViT/reduced_imagenet/*
+
+# Ignoring macOS directory store
+.DS_Store
