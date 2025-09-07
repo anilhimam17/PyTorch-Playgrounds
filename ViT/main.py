@@ -1,4 +1,5 @@
 from src.data import DataHandler
+import matplotlib.pyplot as plt
 
 
 def main():
@@ -7,19 +8,13 @@ def main():
 
     data_handle = DataHandler()
 
-    # Training Set
+    # Loading the sets from disk
     train_set = data_handle.load_set("train")
-    class_names = train_set.classes
-
-    print(f"Total No of Class: {len(class_names)}")
-    print(f"Classes: {class_names}")
-    print(f"Length of the Training-Dataset: {len(train_set)}")
-
-    # Validation Set
     valid_set = data_handle.load_set("valid")
-    class_names = valid_set.classes
 
-    print(f"Length of the Validation-Dataset: {len(valid_set)}")
+    # Preparing the sets
+    train_prep = data_handle.prepare_dataset(train_set)
+    valid_prep = data_handle.prepare_dataset(valid_set)
 
 
 # ==== Driver Code ====
