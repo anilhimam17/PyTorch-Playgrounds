@@ -1,5 +1,7 @@
-from src.data import DataHandler
 import matplotlib.pyplot as plt
+
+from src.data import DataHandler
+from src.resnet50 import Resnet50
 
 
 def main():
@@ -15,6 +17,10 @@ def main():
     # Preparing the sets
     train_prep = data_handle.prepare_dataset(train_set)
     valid_prep = data_handle.prepare_dataset(valid_set)
+
+    # Loading the Model and viewing the Architecture
+    first_resnet_50 = Resnet50()
+    print(first_resnet_50)
 
 
 # ==== Driver Code ====
