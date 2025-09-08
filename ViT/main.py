@@ -1,7 +1,13 @@
+from pathlib import Path
 import matplotlib.pyplot as plt
 
 from src.data import DataHandler
 from src.resnet50 import Resnet50
+from src.optimizer import TrainingLoop
+
+
+# Learning Curve Asset Path
+ASSET_PATH = Path("./assets")
 
 
 def main():
@@ -18,9 +24,31 @@ def main():
     train_prep = data_handle.prepare_dataset(train_set)
     valid_prep = data_handle.prepare_dataset(valid_set)
 
-    # Loading the Model and viewing the Architecture
+    # Loading the Model
     first_resnet_50 = Resnet50()
-    print(first_resnet_50)
+    
+    # Loading the Training Loop Handler
+    optimizer = TrainingLoop(learning_rate=1e-3, model=first_resnet_50)
+    
+    # Training the model
+    train_losses, valid_losses = optimizer.train_model(30, train_prep, valid_prep)
+
+    # Plotting the losses
+    plt.figure(figsize=(10, 8))
+    plt.title("Learning Curve")
+    plt.plot(range(1, len(train_losses) + 1), train_losses, c="b", ls="-.", label="Train Loss")
+    plt.plot(range(1, len(valid_losses) + 1), valid_losses, c="g", ls="-*", label="Valid Loss")
+    plt.legend(loc="upper right")
+    plt.xlabel("Epochs")
+    plt.ylabel("Loss")
+
+    # Storing the Learning Curve
+    if not ASSET_PATH.exists():
+        ASSET_PATH.mkdir()
+    plt.savefig(ASSET_PATH / "learning_curve.png")
+
+    # Rendering the plot
+    plt.show()
 
 
 # ==== Driver Code ====

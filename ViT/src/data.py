@@ -18,7 +18,7 @@ class DataHandler:
             v2.CenterCrop(size=(224, 224)),  # Crop the Image to the Subject
             v2.ToImage(),  # Converts PIL Image to Tensor
             v2.ToDtype(torch.float32, scale=True),  # Converting the Dtype for Normalisation
-            # v2.Normalize(mean=self.norm_means, std=self.norm_stds),  # Applies Normalisation
+            v2.Normalize(mean=self.norm_means, std=self.norm_stds),  # Applies Normalisation
         ])
 
     def load_set(self, set_name: str) -> DatasetFolder:

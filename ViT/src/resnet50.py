@@ -63,7 +63,7 @@ class Resnet50(torch.nn.Module):
         # Downstream Layers
         self.fc = torch.nn.Linear(in_features=2048 * 1, out_features=1000)
 
-    def forward(self, X: torch.Tensor, y: torch.Tensor | None) -> torch.Tensor:
+    def forward(self, X: torch.Tensor) -> torch.Tensor:
         """Implements the forward propagation of the complete Resnet Model."""
 
         avg_pool_scores = self.model_conv_layers(X)
