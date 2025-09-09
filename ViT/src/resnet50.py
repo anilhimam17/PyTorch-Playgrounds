@@ -61,7 +61,7 @@ class Resnet50(torch.nn.Module):
             )
 
         # Downstream Layers
-        self.fc = torch.nn.Linear(in_features=2048 * 1, out_features=1000)
+        self.fc = torch.nn.Linear(in_features=2048 * 1, out_features=fc_size)
 
     def forward(self, X: torch.Tensor) -> torch.Tensor:
         """Implements the forward propagation of the complete Resnet Model."""

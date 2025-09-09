@@ -1,3 +1,5 @@
+import torch
+
 from pathlib import Path
 import matplotlib.pyplot as plt
 
@@ -8,6 +10,9 @@ from src.optimizer import TrainingLoop
 
 # Learning Curve Asset Path
 ASSET_PATH = Path("./assets")
+
+# Accelerator Device
+DEVICE = torch.accelerator.current_accelerator()
 
 
 def main():
@@ -25,7 +30,7 @@ def main():
     valid_prep = data_handle.prepare_dataset(valid_set)
 
     # Loading the Model
-    first_resnet_50 = Resnet50()
+    first_resnet_50 = Resnet50().to(device=DEVICE)
     
     # Loading the Training Loop Handler
     optimizer = TrainingLoop(learning_rate=1e-3, model=first_resnet_50)
