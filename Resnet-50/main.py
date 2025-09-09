@@ -17,7 +17,7 @@ DEVICE = torch.accelerator.current_accelerator()
 
 def main():
     """The main function for the Vision Transformer."""
-    print("Hello, Vision Transformer")
+    print("Hello, Resnet-50")
 
     data_handle = DataHandler()
 
