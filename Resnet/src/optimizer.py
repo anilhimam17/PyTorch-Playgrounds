@@ -1,5 +1,7 @@
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 import torch
+
 import time
 from pathlib import Path
 
@@ -17,6 +19,11 @@ class TrainingLoop:
         )
         self.device = torch.accelerator.current_accelerator()
         self.loss_fn = torch.nn.CrossEntropyLoss()
+
+        # Learning Rate Scheduler
+        self.lr_schedule = ReduceLROnPlateau(
+            optimizer=self.optim, mode="min", patience=5, min_lr=1e-6
+        )
 
         # Creating the Checkpoint Storage Directory
         self.model_dir = Path(CHECKPOINT_PATH)
@@ -52,7 +59,7 @@ class TrainingLoop:
             # ==== Training Step ====
 
             # Completing a single epoch
-            for batch, (X, y) in enumerate(train_set):
+            for X, y in train_set:
 
                 # Moving the batches to GPU
                 X, y = X.to(self.device), y.to(self.device)
@@ -77,7 +84,7 @@ class TrainingLoop:
             # Turning on the Eval mode on the model for the BN-Layers
             self.model.eval()
             with torch.no_grad():
-                for batch, (X, y) in enumerate(valid_set):
+                for X, y in valid_set:
 
                     # Moving the batches to GPU
                     X, y = X.to(self.device), y.to(self.device)
@@ -96,6 +103,9 @@ class TrainingLoop:
             mean_loss_train /= len(train_set)
             mean_loss_valid /= len(valid_set)
             time_epoch = end - start
+
+            # Update the LR-Schedule
+            self.lr_schedule.step(mean_loss_valid)
 
             # Updating the Caches
             train_losses.append(mean_loss_train)
