@@ -11,7 +11,7 @@ class Resnet50(torch.nn.Module):
     initial_stride = 2
     initial_pool_size = 3
     
-    def __init__(self, input_channels: int = 3, fc_size: int = 1000) -> None:
+    def __init__(self, input_channels: int = 3, fc_size: int = 100) -> None:
 
         # Loading all the properties from the super class
         super().__init__()
@@ -25,6 +25,8 @@ class Resnet50(torch.nn.Module):
                 stride=self.initial_stride,
                 padding=3   
             ),
+            torch.nn.BatchNorm2d(num_features=self.initial_fmaps),
+            torch.nn.ReLU(),
             torch.nn.MaxPool2d(
                 kernel_size=self.initial_pool_size,
                 stride=2,

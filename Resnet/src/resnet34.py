@@ -11,7 +11,7 @@ class Resnet34(torch.nn.Module):
     initial_stride = 2
     initial_pool_size = 3
 
-    def __init__(self, in_channels: int = 3, fc_size: int = 1000, dropout_rate: float = 0.2):
+    def __init__(self, in_channels: int = 3, fc_size: int = 100, dropout_rate: float = 0.2):
 
         # Loading all the properties and parameters from the super class
         super().__init__()
