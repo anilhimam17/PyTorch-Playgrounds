@@ -26,4 +26,3 @@ class FeedForward(torch.nn.Module):
         - torch.Tensor -> Batch_Size, N_Patch, Embedding Dims"""
 
         return self.feed_forward_block(X)
-
