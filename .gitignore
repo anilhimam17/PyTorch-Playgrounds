@@ -11,7 +11,7 @@ models
 __pycache__
 
 # Stopping local dataset being tracked
-Resnet/reduced_imagenet/*
+reduced_imagenet/*
 
 # Ignoring macOS directory store
 .DS_Store
