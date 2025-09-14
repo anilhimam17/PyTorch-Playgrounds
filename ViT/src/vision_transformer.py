@@ -7,7 +7,7 @@ class VisionTransformer(torch.nn.Module):
     """This class implements the complete Vision Transformer from scratch."""
 
     def __init__(
-            self, n_layers: int = 12, image_size: int = 224, 
+            self, n_classes: int, n_layers: int = 12, image_size: int = 224, 
             patch_size: int = 16, embed_dims: int = 768, n_heads: int = 12, 
             in_features: int = 768, dropout_rate: float = 0.2
         ) -> None:
@@ -51,7 +51,7 @@ class VisionTransformer(torch.nn.Module):
         # MLP Head
         self.mlp_head = torch.nn.Linear(
             in_features=embed_dims,
-            out_features=1,
+            out_features=n_classes,
             bias=True
         )
 
@@ -71,10 +71,13 @@ class VisionTransformer(torch.nn.Module):
         image_patches: torch.Tensor = image_tensors.permute(dims=[0, 2, 1])         # Batch_Size, 196, 768
 
         # Prepending the Learnable CLS Token
-        image_patches = torch.cat([
-            self.cls_token.expand(X.shape[0], -1, -1),
-            image_patches
-        ])
+        image_patches = torch.cat(
+            [
+                self.cls_token.expand(X.shape[0], -1, -1),
+                image_patches
+            ],
+            dim=1
+        )
 
         # Position Embedding
         pos_scores = self.positional_embeddings(
