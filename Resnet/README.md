@@ -12,3 +12,10 @@ This repository provides custom PyTorch implementations of ResNet-34 and ResNet-
 *   **Flexible Training Loop:** Features AdamW optimizer, `ReduceLROnPlateau` learning rate scheduler, early stopping, and model checkpointing.
 *   **Distributed Training Ready:** Configured for `torch.nn.DataParallel` for multi-GPU training.
 *   **Performance Visualization:** Generates learning curves to monitor training and validation loss.
+
+## Learning Curve
+### Resnet-34
+![Learning Curve of Resnet-34](./assets/resnet-34.png)
+
+### Resnet-50
+![Learning Curve of Resnet-50](./assets/resnet-50.png)
