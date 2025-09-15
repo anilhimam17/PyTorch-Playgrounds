@@ -2,6 +2,9 @@
 
 This repository contains a PyTorch implementation of the Vision Transformer (ViT-Base/16) model built from first principles. It includes modular components for the patch embedding, multi-head self-attention, feed-forward networks, and the overall Transformer Encoder architecture. The project also provides a robust data pipeline and training loop to facilitate experimentation and understanding of ViT's core mechanisms. The project aims to provide a controlled environment for comparing the training behavior, performance, and overfitting characteristics of the model in contrast to the Resnets.
 
+>Here is a link to my notes during the paper review:
+>[Paper Notes](./assets/Vision%20Transformers.pdf)
+
 ## ✨ Features
 
 *   **Custom ViT Implementation:**
@@ -15,3 +18,6 @@ This repository contains a PyTorch implementation of the Vision Transformer (ViT
 *   **Flexible Training Loop:** Features AdamW optimizer, `ReduceLROnPlateau` learning rate scheduler, early stopping, and model checkpointing.
 *   **Distributed Training Ready:** Configured for `torch.nn.DataParallel` for multi-GPU training.
 *   **Performance Visualization:** Generates learning curves to monitor training and validation loss.
+
+## Learning Curve
+![Learning Curve of the ViT](./assets/vit.png)
