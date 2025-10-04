@@ -40,11 +40,13 @@ class Flickr30Dataset(torch.utils.data.Dataset):
 
         # Loading the list of Captions
         image_captions = [caption for caption in image_name_subset.iloc[:, -1]]
+        caption_idx = torch.randint(0, 5, size=(1,))
+        image_caption = image_captions[caption_idx[0]]
 
         # Creating the Dataset Entry
         sample = {
             "image": image_data,
-            "captions": image_captions
+            "caption": image_caption
         }
         
         # If transforms are available
@@ -52,15 +54,6 @@ class Flickr30Dataset(torch.utils.data.Dataset):
             sample["image"] = self.transforms(sample["image"])
 
         return sample
-    
-    def construct_dataset(self) -> torch.utils.data.Dataset:
-        """Constructs the complete Flicker30k Dataset."""
-
-        unique_df = self.captions_df["image_name"].unique()
-        print(unique_df)
-
-        return torch.utils.data.Dataset()
-
 
     def show_sample_image_text_pairs(self) -> None:
         """Loads a single random sample and displays it."""
@@ -78,7 +71,7 @@ class Flickr30Dataset(torch.utils.data.Dataset):
 
             # Displaying the Image
             ax = plt.subplot(2, 3, i + 1)
-            ax.set_title(f"{sample["captions"][0]}: {sample['image'].shape}", fontdict={"fontsize": 5})
+            ax.set_title(f"{sample["caption"]}: {sample['image'].shape}", fontdict={"fontsize": 5})
             ax.imshow(sample["image"])
             ax.set_axis_off()
         
