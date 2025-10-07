@@ -11,13 +11,21 @@ from pathlib import Path
 class Flickr30Dataset(torch.utils.data.Dataset):
     """This class is responsible for constructing the custom dataset for Flickr."""
 
-    def __init__(self, root_dir: Path, csv_path: Path, transforms: v2.Compose) -> None:
+    def __init__(self, root_dir: Path, df: pd.DataFrame, transforms: v2.Compose, idx: torch.Tensor) -> None:
         
         # Loading the Properties of the Super Class
         super().__init__()
 
+        # Local path for all the images
         self.local_path = root_dir / "flickr30k_images"
-        self.captions_df = pd.read_csv(csv_path, sep="|", encoding="utf-8")
+        
+        # Accessing the Full Captions DataFrame and finding the Unique Images
+        full_captions_df = df
+        unique_image_names = full_captions_df["image_name"].unique()
+
+        # Creating the Split for the Set based on Unique Image Names with all 5 captions
+        self.split_based_image_names = [unique_image_names[id] for id in idx]
+        self.captions_df = full_captions_df[full_captions_df["image_name"].isin(self.split_based_image_names)]
 
         # Custom Transforms to operate on the Dataset
         self.transforms = transforms
@@ -31,7 +39,7 @@ class Flickr30Dataset(torch.utils.data.Dataset):
         """Retrieves the ith example from the dataset."""
 
         # Querying the Dataframe for all the samples of Image
-        image_name = self.captions_df["image_name"].unique()[index]
+        image_name = self.split_based_image_names[index]
         image_name_subset = self.captions_df[self.captions_df["image_name"] == image_name]
 
         # Loading the Image
@@ -40,7 +48,7 @@ class Flickr30Dataset(torch.utils.data.Dataset):
 
         # Loading the list of Captions
         image_captions = [caption for caption in image_name_subset.iloc[:, -1]]
-        caption_idx = torch.randint(0, 5, size=(1,))
+        caption_idx = torch.randint(0, len(image_captions), size=(1,))
         image_caption = image_captions[caption_idx[0]]
 
         # Creating the Dataset Entry
