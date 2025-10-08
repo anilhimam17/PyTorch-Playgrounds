@@ -47,7 +47,7 @@ class Flickr30Dataset(torch.utils.data.Dataset):
         image_data = Image.open(image_path)
 
         # Loading the list of Captions
-        image_captions = [caption for caption in image_name_subset.iloc[:, -1]]
+        image_captions = image_name_subset.iloc[:, -1].astype(str).tolist()
         caption_idx = torch.randint(0, len(image_captions), size=(1,))
         image_caption = image_captions[caption_idx[0]]
 
