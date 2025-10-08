@@ -1,6 +1,6 @@
 import torch
 
-from src.vision_encoder import VisionEncoder
+from ViT.src.vision_encoder import VisionEncoder
 
 
 class VisionTransformer(torch.nn.Module):

@@ -1,7 +1,7 @@
 import torch
 
-from src.feed_forward import FeedForward
-from src.multi_head_attention import MultiHeadSelfAttention
+from ViT.src.feed_forward import FeedForward
+from ViT.src.multi_head_attention import MultiHeadSelfAttention
 
 
 class VisionEncoder(torch.nn.Module):
