@@ -11,7 +11,7 @@ from pathlib import Path
 class Flickr30Dataset(torch.utils.data.Dataset):
     """This class is responsible for constructing the custom dataset for Flickr."""
 
-    def __init__(self, root_dir: Path, df: pd.DataFrame, transforms: v2.Compose, idx: torch.Tensor) -> None:
+    def __init__(self, root_dir: Path, df: pd.DataFrame, transforms: v2.Compose | None, idx: torch.Tensor) -> None:
         
         # Loading the Properties of the Super Class
         super().__init__()

@@ -5,13 +5,22 @@ import torch
 import time
 from pathlib import Path
 
+from CLIP.src.clip_lora import PreTrainedCLIP
 
+# ==== Model Checkpoint Path ====
 CHECKPOINT_PATH = "./models"
+
+# ==== Local Accelerator Device ====
+DEVICE = "mps"
 
 
 class TrainingLoop:
     """This class handles the training loop for the models."""
-    def __init__(self, learning_rate: float, model: torch.nn.Module):
+    def __init__(
+            self, 
+            learning_rate: float,
+            model: torch.nn.Module | PreTrainedCLIP,
+        ):
         
         # Loading the Model Instance for the Training Loop
         self.model = model
@@ -21,9 +30,6 @@ class TrainingLoop:
             params=self.model.parameters(),
             lr=learning_rate
         )
-
-        # Accelerator Device
-        self.device = torch.accelerator.current_accelerator()
 
         # Learning Rate Scheduler
         self.lr_schedule = ReduceLROnPlateau(
@@ -36,8 +42,10 @@ class TrainingLoop:
             self.model_dir.mkdir()
     
     def train_model(
-            self, epochs: int,
-            train_set: DataLoader, valid_set: DataLoader
+            self, 
+            epochs: int,
+            train_set: DataLoader, 
+            valid_set: DataLoader
         ) -> tuple[list[float], list[float]]:
         """Trains the model for the given number of epochs."""
 
@@ -70,14 +78,14 @@ class TrainingLoop:
             for batch in train_set:
 
                 # Moving the batches to GPU
-                image_batch = batch["image"].to(self.device)
+                image_batch = batch["image"]
                 text_batch = batch["caption"]
             
                 # Training Step
                 logits = self.model(image_batch, text_batch)
 
                 # Constrastive Learning Labels: Indices of the respective encoder encodings
-                labels = torch.arange(logits.shape[0], device=self.device)
+                labels = torch.arange(logits.shape[0], device=DEVICE)
 
                 # Loss Calculation
                 image_to_text_loss = loss_fn(logits, labels)
@@ -101,14 +109,14 @@ class TrainingLoop:
                 for batch in valid_set:
 
                     # Moving the batches to GPU
-                    image_batch = batch["image"].to(self.device)
+                    image_batch = batch["image"]
                     text_batch = batch["caption"]
 
                     # Validation Calculation
                     logits = self.model(image_batch, text_batch)
 
                     # Constrative Learning Labels
-                    labels = torch.arange(logits.shape[0], device=self.device)
+                    labels = torch.arange(logits.shape[0], device=DEVICE)
 
                     # Loss Calculation
                     image_to_text_loss = loss_fn(logits, labels)

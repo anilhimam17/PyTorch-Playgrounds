@@ -67,16 +67,24 @@ class DataHandler:
         self.train_idx = full_shuffled_indices[:n_unique_images - valid_len]
         self.valid_idx = full_shuffled_indices[n_unique_images - valid_len:]
 
-    def construct_dataset(self, batch_size: int = 64) -> tuple[torch.utils.data.DataLoader, torch.utils.data.DataLoader]:
+    def construct_dataset(self, batch_size: int = 64, auto_transforms: bool = True) -> tuple[torch.utils.data.DataLoader, torch.utils.data.DataLoader]:
         """Constructs and loads the preprocessed, transformed and batched dataset."""
 
         # Constructing the Splits
-        self.train_dataset = Flickr30Dataset(
-            root_dir=self.local_path, df=self.full_captions_df, transforms=self.train_transforms, idx=self.train_idx
-        )
-        self.valid_dataset = Flickr30Dataset(
-            root_dir=self.local_path, df=self.full_captions_df, transforms=self.test_transforms, idx=self.valid_idx
-        )
+        if auto_transforms:
+            self.train_dataset = Flickr30Dataset(
+                root_dir=self.local_path, df=self.full_captions_df, transforms=self.train_transforms, idx=self.train_idx
+            )
+            self.valid_dataset = Flickr30Dataset(
+                root_dir=self.local_path, df=self.full_captions_df, transforms=self.test_transforms, idx=self.valid_idx
+            )
+        else:
+            self.train_dataset = Flickr30Dataset(
+                root_dir=self.local_path, df=self.full_captions_df, idx=self.train_idx, transforms=None
+            )
+            self.valid_dataset = Flickr30Dataset(
+                root_dir=self.local_path, df=self.full_captions_df, idx=self.valid_idx, transforms=None
+            )
         
         # Loading an Iterable for the Splits
         loaded_train_dataset = torch.utils.data.DataLoader(
