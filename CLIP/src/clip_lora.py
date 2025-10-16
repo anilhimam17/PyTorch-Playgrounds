@@ -7,7 +7,12 @@ from transformers import (
     CLIPImageProcessorFast,
     CLIPTokenizerFast
 )
-
+from peft import (
+    LoraConfig,
+    PeftModel,
+    PeftMixedModel,
+    get_peft_model
+)
 import torch
 
 
@@ -15,7 +20,10 @@ class PreTrainedCLIP:
 
     hf_model_id = "openai/clip-vit-base-patch16"
 
-    def __init__(self) -> None:
+    def __init__(self, lora_config: LoraConfig) -> None:
+
+        # ==== Instance Variables ====
+        self.lora_config = lora_config
 
         # ==== Configuring and Compiling the Base Model ====
 
@@ -48,13 +56,27 @@ class PreTrainedCLIP:
             tokenizer=tokenizer_config
         )
 
+        # Preparing the base model with LoRA Adapters
+        self.peft_model = self.add_lora_adapters()
+
     def __call__(self, image: torch.Tensor, text: list[str]) -> torch.Tensor:
+        """Special Method for the forward propagation of the PretrainedCLIP model 
+        based on Custom Dataset."""
+
         preprocessed_inputs = self.preprocessor(
             text=text, 
             images=image, 
             return_tensors="pt",    # type: ignore | Pylance doesn't track kwargs
             padding=True            # type: ignore | Pylance doesn't track kwargs
         )
-        outputs = self.base_model(**preprocessed_inputs)
+        outputs = self.peft_model(**preprocessed_inputs)
 
         return outputs
+    
+    def add_lora_adapters(self) -> PeftModel | PeftMixedModel:
+        """Helper function to add the LoRA Adaptors to the pre-trained model."""
+
+        return get_peft_model(
+            model=self.base_model,
+            peft_config=self.lora_config
+        )
