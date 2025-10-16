@@ -16,11 +16,14 @@ from peft import (
 import torch
 
 
-class PreTrainedCLIP:
+class PreTrainedCLIP(torch.nn.Module):
 
     hf_model_id = "openai/clip-vit-base-patch16"
 
-    def __init__(self, lora_config: LoraConfig) -> None:
+    def __init__(self, lora_config: LoraConfig, device: str = "mps") -> None:
+
+        # Inheriting the properties of the parent class
+        super().__init__()
 
         # ==== Instance Variables ====
         self.lora_config = lora_config
@@ -59,19 +62,26 @@ class PreTrainedCLIP:
         # Preparing the base model with LoRA Adapters
         self.peft_model = self.add_lora_adapters()
 
-    def __call__(self, image: torch.Tensor, text: list[str]) -> torch.Tensor:
+        # Loading the model onto GPU
+        self.peft_model.to(device=device)
+
+    def forward(self, image: torch.Tensor, text: list[str]) -> torch.Tensor:
         """Special Method for the forward propagation of the PretrainedCLIP model 
         based on Custom Dataset."""
 
+        # Preprocessing the Inputs
         preprocessed_inputs = self.preprocessor(
             text=text, 
             images=image, 
             return_tensors="pt",    # type: ignore | Pylance doesn't track kwargs
             padding=True            # type: ignore | Pylance doesn't track kwargs
         )
+
+        # Transferring the Inputs to GPU Device from CPU
+        preprocessed_inputs = {k: v.to(self.peft_model.device) for k, v in preprocessed_inputs.items()}
         outputs = self.peft_model(**preprocessed_inputs)
 
-        return outputs
+        return outputs.logits_per_image
     
     def add_lora_adapters(self) -> PeftModel | PeftMixedModel:
         """Helper function to add the LoRA Adaptors to the pre-trained model."""
@@ -80,3 +90,11 @@ class PreTrainedCLIP:
             model=self.base_model,
             peft_config=self.lora_config
         )
+    
+    def view_model_architecture(self) -> None:
+        """Displays the architecture of the LoRA customised model."""
+
+        print("Model Architecture:\n", self.peft_model, end="\n\n---------------------------\n\n")
+        print("Total Base Trained Parameters: ", sum(layer.numel() for layer in self.base_model.parameters()))
+        print("Total LoRA Trainable Parameters: ", end="")
+        self.peft_model.print_trainable_parameters()
