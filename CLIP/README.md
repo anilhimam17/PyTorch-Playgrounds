@@ -5,6 +5,9 @@ This repository documents a two-part research journey into OpenAI's CLIP model. 
 -   **Part 1: From-Scratch Implementation.** A complete implementation of the CLIP architecture in PyTorch to understand its core mechanics.
 -   **Part 2: PEFT Fine-Tuning Case Study.** An experimental analysis of using LoRA (Low-Rank Adaptation) to efficiently adapt a pre-trained CLIP model to a new dataset.
 
+> **Quick Link to Kaggle**:  
+> [Kaggle Notebook](https://www.kaggle.com/code/goduguanilhimam/peft-clip-with-lora)
+
 ## Core Concepts of CLIP
 
 CLIP (Contrastive Language-Image Pre-training) is a self-supervised model that learns visual representations from natural language. It uses a contrastive learning objective to align the vector representations of images and their corresponding text captions in a shared multimodal embedding space.
