@@ -146,7 +146,7 @@ class TrainingLoop:
                 best_valid_loss = mean_loss_valid
 
                 # Saving the Model by weights
-                torch.save(obj=self.model.state_dict(), f=self.model_dir / "vit_base_16.pth")
+                torch.save(obj=self.model.state_dict(), f=self.model_dir / "clip.pth")
                 print("New best model was saved")
                 patience_counter = 0
             else:
