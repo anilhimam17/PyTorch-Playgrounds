@@ -1,7 +1,5 @@
 from pathlib import Path
-from torchvision.io import decode_image
 
-from CLIP.src.load_model import FineTunedModel
 from CLIP.src.ui import UserInterface
 
 

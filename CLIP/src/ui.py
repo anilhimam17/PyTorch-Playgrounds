@@ -58,30 +58,40 @@ class UserInterface:
                 # Left Column
                 with gr.Column(scale=1):
                     file_widget = gr.File(label="Upload Images", file_count="directory")
-                    upload_btn = gr.Button(value="Upload")
 
-                    text_box = gr.Textbox(value="Describe your image for search")
-                    submit_btn = gr.Button(value="Submit")
+                    # The textbox to search for images.
+                    text_box = gr.Textbox(placeholder="Describe your image for search")
+
+                    # The slider for top n images.
+                    top_n = gr.Slider(
+                        label="Top N Image Filter",
+                        minimum=1,
+                        maximum=10,
+                        value=3,
+                        step=1,
+                        precision=0,
+                        interactive=False
+                    )
 
                 # Right Column
                 with gr.Column(scale=1):
                     status_box = gr.Label(label="Status", value="Upload Images for Indexing")
-                    image_display = gr.Image(label="Top Hits")
+                    image_display_gallery = gr.Gallery(label="Top Hits", file_types=["image"], rows=1, columns=1)
 
             # API Patches
 
             # The Entrypoint to the generate_image_embedding API
-            upload_btn.click(
+            file_widget.upload(
                 fn=self.index_images,
                 inputs=file_widget,
-                outputs=[status_box, submit_btn]
+                outputs=[status_box, top_n]
             )
 
             # The Entrypoint to the generate_text_embedding API
-            submit_btn.click(
+            text_box.submit(
                 fn=self.find_text_image_hits,
-                inputs=text_box,
-                outputs=image_display
+                inputs=[text_box, top_n],
+                outputs=image_display_gallery
             )
 
         # Running the Demo
@@ -144,7 +154,7 @@ class UserInterface:
 
         return text_embedding_norm
     
-    def find_text_image_hits(self, text_prompt: str) -> str:
+    def find_text_image_hits(self, text_prompt: str, top_n: float) -> list[str]:
         """Orchestrates the image search by taking a text input generating its embeddings
         and utilising the embeddings to lookup the image_embedding_index to display to most similar image.
         
@@ -153,6 +163,11 @@ class UserInterface:
         
         returns:
         - image_path: str -> Absolute path for the most similar image to be displayed."""
+
+        # If the prompt entered is empty.
+        if not text_prompt:
+            gr.Warning("Looks like the text prompt was empty, please provide a valid text prompt for image search.")
+            return []
 
         # Retrieving the Text Embedding.
         text_embedding_norm = self.embed_text(text_prompt=text_prompt)
@@ -170,17 +185,14 @@ class UserInterface:
             else:
                 sim_lookup[image_name] = sim_value
 
-        # Identifying the highest hit
+        # Identifying the highest hit.
         img_scores = sorted(
             list(sim_lookup.items()),
             key=lambda x: x[-1],
             reverse=True
         )
 
-        print(f"Image Scores for : {text_prompt}")
-        print(img_scores)
+        # Retrieving the path for the top n hit images.
+        top_n_hit_image_paths = [self.image_embedding_index[image_name][-1] for image_name, _ in img_scores[:int(top_n)]]
 
-        image_path = self.image_embedding_index[img_scores[0][0]][-1]
-        print(image_path)
-
-        return image_path
+        return top_n_hit_image_paths
