@@ -27,6 +27,10 @@ class UserInterface:
         <mark style="{self.mark_style}">Natural Language Text Prompts</mark>.
         </div>
         """
+        self.file_css = """
+        #upload_widget .file-preview-holder {max-height: 250px; overflow-y: auto;}
+        #result_gallery {height: 30rem; min_height: 400px;}
+        """
 
         # Creating an instance of the Loaded FineTuned Model.
         self.ft_model = FineTunedModel()
@@ -38,7 +42,7 @@ class UserInterface:
         """Loads all the UI elements for the page."""
 
         # Loading the Properties for the Block Interface Layout.
-        with gr.Blocks(**self.block_params) as demo:
+        with gr.Blocks(**self.block_params, css=self.file_css) as demo:
             
             # A registry for all the image embeddings.
             image_embedding_index: gr.State = gr.State({})
@@ -57,7 +61,7 @@ class UserInterface:
 
                 # Left Column
                 with gr.Column(scale=1):
-                    file_widget = gr.File(label="Upload Images", file_count="directory")
+                    file_widget = gr.File(label="Upload Images", file_count="directory", elem_id="upload_widget")
 
                     # The textbox to search for images.
                     text_box = gr.Textbox(placeholder="Describe your image for search")
@@ -75,7 +79,14 @@ class UserInterface:
 
                 # Right Column
                 with gr.Column(scale=1):
-                    image_display_gallery = gr.Gallery(label="Top Hits", file_types=["image"], rows=1, columns=1)
+                    image_display_gallery = gr.Gallery(
+                        label="Top Hits",
+                        file_types=["image"],
+                        rows=1,
+                        columns=1,
+                        object_fit="contain",
+                        elem_id="result_gallery"
+                    )
 
             # API Patches
 
@@ -83,7 +94,7 @@ class UserInterface:
             file_widget.upload(
                 fn=self.index_images,
                 inputs=[file_widget, image_embedding_index],
-                outputs=[top_n, image_embedding_index]
+                outputs=[top_n, text_box, image_embedding_index]
             )
 
             # The Entrypoint to the generate_text_embedding API
@@ -119,7 +130,7 @@ class UserInterface:
         gr.Info(message="Please Wait!!! I am learning the images just now.")
 
         # Updating the UI during indexing
-        yield gr.update(interactive=False), image_embedding_index
+        yield gr.update(interactive=False), gr.update(interactive=False), image_embedding_index
 
         # Root path to the private gradio backend.
         self.backend_path: str = str(Path(root_image_path[0]).parent)
@@ -148,6 +159,7 @@ class UserInterface:
         gr.Info(message="Image Learning Process completed, ready to search for images.")
 
         yield (
+            gr.update(interactive=True),
             gr.update(interactive=True),
             image_embedding_index
         )
