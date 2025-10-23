@@ -231,8 +231,13 @@ class UserInterface:
         top_n_hit_image_paths = [image_embedding_index[image_name][-1] for image_name, _ in img_scores[:int(top_n)]]
 
         # Warning to the user for less overlap.
+        top_scores = [score for _, score in img_scores[:int(top_n)]]
+        print(top_scores)
+
         top_sim_score = img_scores[0][1]
+        if top_sim_score.item() >= SIMILARITY_THREASHOLD and top_sim_score < (SIMILARITY_THREASHOLD + 0.8):
+            gr.Info("Mild Matches found, advise a sharper text prompt to improve results.")
         if top_sim_score.item() < SIMILARITY_THREASHOLD:
-            gr.Info("No significant match with any of the learnt images, displayed images might not highlight the context.")
+            gr.Warning("No Strong Match with any of the learnt images, displayed images might not highlight the context.")
 
         return top_n_hit_image_paths
