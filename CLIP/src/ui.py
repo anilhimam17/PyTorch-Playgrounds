@@ -1,12 +1,15 @@
-import gradio as gr
-from gradio.themes import Ocean
-
-import torch
-from torchvision.io import decode_image, ImageReadMode
-
 from pathlib import Path
 
-from CLIP.src.load_model import FineTunedModel, SIMILARITY_THREASHOLD
+import gradio as gr
+import torch
+from gradio.themes import Ocean
+from torchvision.io import ImageReadMode, decode_image
+
+from CLIP.src.load_model import (
+    MILD_SIMILARITY_OFFSET,
+    SIMILARITY_THREASHOLD,
+    FineTunedModel,
+)
 
 
 class UserInterface:
@@ -39,11 +42,11 @@ class UserInterface:
         # Retrieving the FineTuned Temperature Parameter.
         self.temperature = self.ft_model.peft_model.base_model.model.logit_scale.exp()
 
-    def page(self) -> None:
-        """Loads all the UI elements for the page."""
+    def main_page(self) -> None:
+        """Loads all the UI elements for the main page."""
 
         # Loading the Properties for the Block Interface Layout.
-        with gr.Blocks(**self.block_params, css=self.file_css) as demo:
+        with gr.Blocks(**self.block_params, css=self.file_css) as main_page_demo:
             
             # A registry for all the image embeddings.
             image_embedding_index: gr.State = gr.State({})
@@ -78,6 +81,9 @@ class UserInterface:
                         interactive=False
                     )
 
+                    # Clear and Reset
+                    clear_and_reset_btn = gr.Button("Clear and Reset")
+
                 # Right Column
                 with gr.Column(scale=1):
                     image_display_gallery = gr.Gallery(
@@ -105,8 +111,14 @@ class UserInterface:
                 outputs=image_display_gallery
             )
 
-        # Running the Demo
-        demo.launch()
+            # Clear and Reset the Application.
+            clear_and_reset_btn.click(
+                fn=self.clear_states,
+                outputs=[file_widget, text_box, image_display_gallery, image_embedding_index]
+            )
+
+        # Running the Main Page.
+        main_page_demo.launch()
 
     def index_images(self, root_image_path: list[str], image_embedding_index: dict[str, tuple[torch.Tensor, str]]):
         """Retrieves the images that were input to the File widget
@@ -213,13 +225,9 @@ class UserInterface:
 
         for image_name, image_embedding_norm_and_path in image_embedding_index.items():
             
-            # Skipping the Calculation of Similarity if it already exists
-            if image_name in sim_lookup.keys():
-                continue
             # Similarity Calculation
-            else:
-                sim_value = (image_embedding_norm_and_path[0] @ text_embedding_norm.T) * self.temperature
-                sim_lookup[image_name] = sim_value
+            sim_value = (image_embedding_norm_and_path[0] @ text_embedding_norm.T) * self.temperature
+            sim_lookup[image_name] = sim_value
 
         # Identifying the highest hit.
         img_scores = sorted(
@@ -232,13 +240,19 @@ class UserInterface:
         top_n_hit_image_paths = [image_embedding_index[image_name][-1] for image_name, _ in img_scores[:int(top_n)]]
 
         # Warning to the user for less overlap.
-        top_scores = [score for _, score in img_scores[:int(top_n)]]
-        print(top_scores)
 
+        # Case 1. Mild Confidence based on the Similarity Scores.
         top_sim_score = img_scores[0][1]
-        if top_sim_score.item() >= SIMILARITY_THREASHOLD and top_sim_score < (SIMILARITY_THREASHOLD + 0.8):
+        if top_sim_score.item() >= SIMILARITY_THREASHOLD and top_sim_score < (SIMILARITY_THREASHOLD + MILD_SIMILARITY_OFFSET):
             gr.Info("Mild Matches found, advise a sharper text prompt to improve results.")
-        if top_sim_score.item() < SIMILARITY_THREASHOLD:
+        
+        # Case 2. Very little Confidence based on the Similarity Scores.
+        elif top_sim_score.item() < SIMILARITY_THREASHOLD:
             gr.Warning("No Strong Match with any of the learnt images, displayed images might not highlight the context.")
 
         return top_n_hit_image_paths
+    
+    def clear_states(self):
+        """Clears the states for all the components."""
+
+        return gr.update(value=None), gr.update(value=""), gr.update(value=None), {}
