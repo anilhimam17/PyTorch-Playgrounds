@@ -16,20 +16,21 @@ class UserInterface:
         
         # Placeholder for any long descriptions and styling for the website.
         self.block_params = {"title": "Research Companion", "fill_height": True, "fill_width": True, "theme": Ocean()}
-        self.mark_style = 'background-color: #c9c8c7; padding: 0.2em 0.4em; border-radius: 5px;'
-        self.desciption_style = 'text-align: center; line-height: 2.5; font-size: 16px;'
-        self.header_description = f"""
-        <div style="{self.desciption_style}">
+        self.header_description = """
+        <div class="description_style">
         Wanna leverage AI to search / organize your folders of photos rapidly
-        <mark style="{self.mark_style}">Project Lighthouse</mark> is the way to go.<br>
-        <mark style="{self.mark_style}">Upload a folder of images</mark> and search 
+        <mark class="mark_style">Project Lighthouse</mark> is the way to go.<br>
+        <mark class="mark_style">Upload a folder of images</mark> and search 
         for specific images you are looking for through
-        <mark style="{self.mark_style}">Natural Language Text Prompts</mark>.
+        <mark class="mark_style">Natural Language Text Prompts</mark>.
         </div>
         """
         self.file_css = """
         #upload_widget .file-preview-holder {max-height: 250px; overflow-y: auto;}
         #result_gallery {height: 30rem; min_height: 400px;}
+        .description_style {text-align: center; line-height: 2.2; font-size: 16px; width: 100%;}
+        .mark_style {background-color: #c9c8c7; padding: 0.2em 0.4em; border-radius: 5px;}
+        .header_style {text-align: center; font-size: 32px; margin-top: 10px; width: 100%;}
         """
 
         # Creating an instance of the Loaded FineTuned Model.
@@ -50,7 +51,7 @@ class UserInterface:
             # Main Title as a Div Row
             with gr.Row():
                 _ = gr.Markdown(
-                    "<H1 style='text-align: center; font-size: 32px; margin-top: 10px;'>Project Lighthouse 🗼</H1>"
+                    "<H1 class='header_style'>Project Lighthouse 🗼</H1>"
                 )
             # Main Description as Div Row
             with gr.Row():
