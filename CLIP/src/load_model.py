@@ -11,6 +11,12 @@ from transformers import (
 )
 
 
+# ==== Global Variable ====
+
+# Similarity Threshold for out of distribution inferences
+SIMILARITY_THREASHOLD = 22.0
+
+
 class FineTunedModel:
     """This class loads the fine tuned model for inferencing."""
 

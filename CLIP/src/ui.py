@@ -6,7 +6,7 @@ from torchvision.io import decode_image, ImageReadMode
 
 from pathlib import Path
 
-from CLIP.src.load_model import FineTunedModel
+from CLIP.src.load_model import FineTunedModel, SIMILARITY_THREASHOLD
 
 
 class UserInterface:
@@ -75,7 +75,6 @@ class UserInterface:
 
                 # Right Column
                 with gr.Column(scale=1):
-                    status_box = gr.Label(label="Status", value="Upload Images for Indexing")
                     image_display_gallery = gr.Gallery(label="Top Hits", file_types=["image"], rows=1, columns=1)
 
             # API Patches
@@ -84,7 +83,7 @@ class UserInterface:
             file_widget.upload(
                 fn=self.index_images,
                 inputs=[file_widget, image_embedding_index],
-                outputs=[status_box, top_n, image_embedding_index]
+                outputs=[top_n, image_embedding_index]
             )
 
             # The Entrypoint to the generate_text_embedding API
@@ -116,8 +115,11 @@ class UserInterface:
         ]
         """
 
+        # Information for the user on beginning indexing
+        gr.Info(message="Please Wait!!! I am learning the images just now.")
+
         # Updating the UI during indexing
-        yield "Indexing Images", gr.update(interactive=False), image_embedding_index
+        yield gr.update(interactive=False), image_embedding_index
 
         # Root path to the private gradio backend.
         self.backend_path: str = str(Path(root_image_path[0]).parent)
@@ -142,8 +144,10 @@ class UserInterface:
                 # Storing the Normalised Tensor into the Session State.
                 image_embedding_index[path_handle.stem] = image_embedding_norm, image_path
 
+        # Information to the user on completing indexing
+        gr.Info(message="Image Learning Process completed, ready to search for images.")
+
         yield (
-            f"Indexing Complete\nNo of Images Indexed: {len(image_embedding_index)}",
             gr.update(interactive=True),
             image_embedding_index
         )
@@ -180,14 +184,19 @@ class UserInterface:
 
         # If the prompt entered is empty.
         if not text_prompt:
-            gr.Warning("Looks like the text prompt was empty, please provide a valid text prompt for image search.")
+            gr.Warning(message="No Text Prompt provided, please input a valid text prompt before an image search.")
+            return []
+        
+        # If no images were uploaded.
+        if not image_embedding_index:
+            gr.Warning(message="No Images uploaded, please upload images before an image search.")
             return []
 
         # Retrieving the Text Embedding.
         text_embedding_norm = self.embed_text(text_prompt=text_prompt)
 
         # Similarity Lookup
-        sim_lookup: dict[str, float] = {}
+        sim_lookup: dict[str, torch.Tensor] = {}
 
         for image_name, image_embedding_norm_and_path in image_embedding_index.items():
             
@@ -208,5 +217,10 @@ class UserInterface:
 
         # Retrieving the path for the top n hit images.
         top_n_hit_image_paths = [image_embedding_index[image_name][-1] for image_name, _ in img_scores[:int(top_n)]]
+
+        # Warning to the user for less overlap.
+        top_sim_score = img_scores[0][1]
+        if top_sim_score.item() < SIMILARITY_THREASHOLD:
+            gr.Info("No significant match with any of the learnt images, displayed images might not highlight the context.")
 
         return top_n_hit_image_paths
