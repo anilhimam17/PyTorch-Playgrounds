@@ -34,14 +34,14 @@ class UserInterface:
         # Retrieving the FineTuned Temperature Parameter.
         self.temperature = self.ft_model.peft_model.base_model.model.logit_scale.exp()
 
-        # A registry for all the image embeddings.
-        self.image_embedding_index: dict[str, tuple[torch.Tensor, str]] = {}
-
     def page(self) -> None:
         """Loads all the UI elements for the page."""
 
         # Loading the Properties for the Block Interface Layout.
         with gr.Blocks(**self.block_params) as demo:
+            
+            # A registry for all the image embeddings.
+            image_embedding_index: gr.State = gr.State({})
 
             # Main Title as a Div Row
             with gr.Row():
@@ -83,38 +83,41 @@ class UserInterface:
             # The Entrypoint to the generate_image_embedding API
             file_widget.upload(
                 fn=self.index_images,
-                inputs=file_widget,
-                outputs=[status_box, top_n]
+                inputs=[file_widget, image_embedding_index],
+                outputs=[status_box, top_n, image_embedding_index]
             )
 
             # The Entrypoint to the generate_text_embedding API
             text_box.submit(
                 fn=self.find_text_image_hits,
-                inputs=[text_box, top_n],
+                inputs=[text_box, top_n, image_embedding_index],
                 outputs=image_display_gallery
             )
 
         # Running the Demo
         demo.launch()
 
-    def index_images(self, root_image_path: list[str]):
+    def index_images(self, root_image_path: list[str], image_embedding_index: dict[str, tuple[torch.Tensor, str]]):
         """Retrieves the images that were input to the File widget
         to generate the image embeddings using the Vision Encoder.
         
         args:
         - root_image_path: list[str] -> A list of absolute paths for all the uploaded 
         images in the gradio private backend directory.
-        
-        object_property:
-        - image_embedding_index: dict[str, torch.Tensor] -> Stores the names of the images 
-        to avoid duplication with the corresponding generated image embeddings for lookup.
+        - image_embedding_index: dict[str, tuple[torch.Tensor, str]] -> The global session state to store
+        the indexed images from upload for each user privately.
 
         returns:
-        - None
+        - tuple[
+            - gr.Update: bool -> Set the interactive property of the top_n slider to true post indexing.
+            - image_embedding_index: dict[str, tuple[torch.Tensor, str] -> Stores the names of the images 
+            to avoid duplication with the corresponding generated image embeddings for lookup. The dictionary
+            is tracked by gr.State() which maintains a global session state.
+        ]
         """
 
         # Updating the UI during indexing
-        yield "Indexing Images", gr.update(interactive=False)
+        yield "Indexing Images", gr.update(interactive=False), image_embedding_index
 
         # Root path to the private gradio backend.
         self.backend_path: str = str(Path(root_image_path[0]).parent)
@@ -122,19 +125,28 @@ class UserInterface:
         # Iterating through each of the uploaded images.
         for image_path in root_image_path:
 
-            # Creating a tensor from the raw image.
+            # Absolute Path to the Image
             path_handle = Path(image_path)
-            image_data = decode_image(str(path_handle), mode=ImageReadMode.RGB).unsqueeze(dim=0)
 
-            # Generating the Image Embedding and storing the normalised tensor.
-            if path_handle.stem in self.image_embedding_index.keys():
+            # Preventing duplication of images based on Image Stem.
+            if path_handle.stem in image_embedding_index.keys():
                 continue
             else:
+                # Loading the Image.
+                image_data = decode_image(str(path_handle), mode=ImageReadMode.RGB).unsqueeze(dim=0)
+
+                # Generating the Image Embedding
                 image_embedding = self.ft_model.generate_image_embedding(image_data)
                 image_embedding_norm = image_embedding / image_embedding.norm(dim=-1, keepdim=True)
-                self.image_embedding_index[path_handle.stem] = image_embedding_norm, image_path
 
-        yield f"Indexing Complete\nNo of Images Indexed: {len(self.image_embedding_index)}", gr.update(interactive=True)
+                # Storing the Normalised Tensor into the Session State.
+                image_embedding_index[path_handle.stem] = image_embedding_norm, image_path
+
+        yield (
+            f"Indexing Complete\nNo of Images Indexed: {len(image_embedding_index)}",
+            gr.update(interactive=True),
+            image_embedding_index
+        )
     
     def embed_text(self, text_prompt: str) -> torch.Tensor:
         """Takes the input from the text prompt provided by the user and 
@@ -154,12 +166,14 @@ class UserInterface:
 
         return text_embedding_norm
     
-    def find_text_image_hits(self, text_prompt: str, top_n: float) -> list[str]:
+    def find_text_image_hits(self, text_prompt: str, top_n: float, image_embedding_index: dict[str, tuple[torch.Tensor, str]]) -> list[str]:
         """Orchestrates the image search by taking a text input generating its embeddings
         and utilising the embeddings to lookup the image_embedding_index to display to most similar image.
         
         args:
         - text_prompt: str -> A string description for the image to be searched.
+        - image_embedding_index: dict[str, tuple[torch.Tensor, str]] -> The global session state to store
+        the indexed images from upload for each user privately. 
         
         returns:
         - image_path: str -> Absolute path for the most similar image to be displayed."""
@@ -175,14 +189,14 @@ class UserInterface:
         # Similarity Lookup
         sim_lookup: dict[str, float] = {}
 
-        for image_name, image_embedding_norm in self.image_embedding_index.items():
+        for image_name, image_embedding_norm_and_path in image_embedding_index.items():
             
-            # Similarity Calculation
-            sim_value = (image_embedding_norm[0] @ text_embedding_norm.T) * self.temperature
-            
+            # Skipping the Calculation of Similarity if it already exists
             if image_name in sim_lookup.keys():
                 continue
+            # Similarity Calculation
             else:
+                sim_value = (image_embedding_norm_and_path[0] @ text_embedding_norm.T) * self.temperature
                 sim_lookup[image_name] = sim_value
 
         # Identifying the highest hit.
@@ -193,6 +207,6 @@ class UserInterface:
         )
 
         # Retrieving the path for the top n hit images.
-        top_n_hit_image_paths = [self.image_embedding_index[image_name][-1] for image_name, _ in img_scores[:int(top_n)]]
+        top_n_hit_image_paths = [image_embedding_index[image_name][-1] for image_name, _ in img_scores[:int(top_n)]]
 
         return top_n_hit_image_paths
