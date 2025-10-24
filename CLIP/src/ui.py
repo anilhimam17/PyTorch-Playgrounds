@@ -140,7 +140,7 @@ class UserInterface:
         """
 
         # Information for the user on beginning indexing
-        gr.Info(message="Please Wait!!! I am learning the images just now.")
+        gr.Info(message="Image Scanning Process has Started ⚡️, Please Wait ⏰!!!")
 
         # Updating the UI during indexing
         yield (
@@ -164,17 +164,21 @@ class UserInterface:
                 continue
             else:
                 # Loading the Image.
-                image_data = decode_image(str(path_handle), mode=ImageReadMode.RGB).unsqueeze(dim=0)
+                try:
+                    image_data = decode_image(str(path_handle), mode=ImageReadMode.RGB).unsqueeze(dim=0)
+                except RuntimeError:
+                    gr.Warning("Please provide a valid images as inputs, Invalid file was ignored.")
+                    continue
+                else:
+                    # Generating the Image Embedding
+                    image_embedding = self.ft_model.generate_image_embedding(image_data)
+                    image_embedding_norm = image_embedding / image_embedding.norm(dim=-1, keepdim=True)
 
-                # Generating the Image Embedding
-                image_embedding = self.ft_model.generate_image_embedding(image_data)
-                image_embedding_norm = image_embedding / image_embedding.norm(dim=-1, keepdim=True)
-
-                # Storing the Normalised Tensor into the Session State.
-                image_embedding_index[path_handle.stem] = image_embedding_norm, image_path
+                    # Storing the Normalised Tensor into the Session State.
+                    image_embedding_index[path_handle.stem] = image_embedding_norm, image_path
 
         # Information to the user on completing indexing
-        gr.Info(message="Image Learning Process completed, ready to search for images.")
+        gr.Info(message="Image Learning Process completed, ready to search for images ✅")
 
         yield (
             gr.update(interactive=True),
@@ -250,11 +254,11 @@ class UserInterface:
         # Case 1. Mild Confidence based on the Similarity Scores.
         top_sim_score = img_scores[0][1]
         if top_sim_score.item() >= SIMILARITY_THREASHOLD and top_sim_score < (SIMILARITY_THREASHOLD + MILD_SIMILARITY_OFFSET):
-            gr.Info("Mild Matches found, advise a sharper text prompt to improve results.")
+            gr.Info("⚠️ Mild Matches found, advise a sharper text prompt to improve results.")
         
         # Case 2. Very little Confidence based on the Similarity Scores.
         elif top_sim_score.item() < SIMILARITY_THREASHOLD:
-            gr.Warning("No Strong Match with any of the learnt images, displayed images might not highlight the context.")
+            gr.Warning("⛔️ No Strong Match with any of the learnt images, displayed images might not highlight the context.")
 
         return top_n_hit_image_paths
     
