@@ -14,7 +14,7 @@ def main() -> None:
     interface = UserInterface()
 
     # Launching the Demo
-    interface.page()
+    interface.main_page()
 
 
 # Driver Code

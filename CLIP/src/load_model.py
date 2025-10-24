@@ -16,6 +16,8 @@ from transformers import (
 # Similarity Threshold for out of distribution inferences
 SIMILARITY_THREASHOLD = 22.0
 
+# Confidence Offset for Mild Hits
+MILD_SIMILARITY_OFFSET = 0.8
 
 class FineTunedModel:
     """This class loads the fine tuned model for inferencing."""
