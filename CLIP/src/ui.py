@@ -101,7 +101,7 @@ class UserInterface:
             file_widget.upload(
                 fn=self.index_images,
                 inputs=[file_widget, image_embedding_index],
-                outputs=[top_n, text_box, image_embedding_index]
+                outputs=[top_n, text_box, clear_and_reset_btn, image_embedding_index]
             )
 
             # The Entrypoint to the generate_text_embedding API
@@ -143,7 +143,12 @@ class UserInterface:
         gr.Info(message="Please Wait!!! I am learning the images just now.")
 
         # Updating the UI during indexing
-        yield gr.update(interactive=False), gr.update(interactive=False), image_embedding_index
+        yield (
+            gr.update(interactive=False),
+            gr.update(interactive=False),
+            gr.update(interactive=False),
+            image_embedding_index
+        )
 
         # Root path to the private gradio backend.
         self.backend_path: str = str(Path(root_image_path[0]).parent)
@@ -172,6 +177,7 @@ class UserInterface:
         gr.Info(message="Image Learning Process completed, ready to search for images.")
 
         yield (
+            gr.update(interactive=True),
             gr.update(interactive=True),
             gr.update(interactive=True),
             image_embedding_index
